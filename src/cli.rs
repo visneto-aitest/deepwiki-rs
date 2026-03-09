@@ -106,6 +106,10 @@ pub struct Args {
     /// Include source code in boundary analysis (default: true)
     #[arg(long)]
     pub boundary_include_source: Option<bool>,
+
+    /// Show only directories when files exceed this count
+    #[arg(long)]
+    pub boundary_only_directories_when_files_more_than: Option<usize>,
 }
 
 /// CLI subcommands
@@ -136,7 +140,7 @@ impl Args {
         let mut config = if let Some(config_path) = &self.config {
             // If config file path is explicitly specified, load from that path
             let msg = target_lang.msg_config_read_error().replace("{:?}", &format!("{:?}", config_path));
-            return Config::from_file(config_path).expect(&msg);
+            Config::from_file(config_path).expect(&msg)
         } else {
             // If no config file is explicitly specified, try loading from default location
             let default_config_path = std::env::current_dir()
@@ -145,7 +149,7 @@ impl Args {
 
             if default_config_path.exists() {
                 let msg = target_lang.msg_config_read_error().replace("{:?}", &format!("{:?}", default_config_path));
-                return Config::from_file(&default_config_path).expect(&msg);
+                Config::from_file(&default_config_path).expect(&msg)
             } else {
                 // Default config file doesn't exist, use default values
                 Config::default()
@@ -224,6 +228,9 @@ impl Args {
         }
         if let Some(include_source) = self.boundary_include_source {
             config.boundary_analysis.include_source_code = include_source;
+        }
+        if let Some(only_dirs_threshold) = self.boundary_only_directories_when_files_more_than {
+            config.boundary_analysis.only_directories_when_files_more_than = Some(only_dirs_threshold);
         }
 
 

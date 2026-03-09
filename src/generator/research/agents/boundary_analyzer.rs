@@ -83,12 +83,8 @@ Please return the analysis results in structured JSON format."#
                 .to_string(),
 
             llm_call_mode: LLMCallMode::Extract,
-            formatter_config: FormatterConfig {
-                include_source_code: true, // Boundary analysis requires viewing source code details
-                code_insights_limit: 100,  // Increase code insights limit to ensure no boundary code is missed
-                only_directories_when_files_more_than: Some(500), // Appropriate limit to avoid information overload
-                ..FormatterConfig::default()
-            },
+
+            formatter_config: FormatterConfig::default(),
         }
     }
 

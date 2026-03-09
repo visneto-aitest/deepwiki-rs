@@ -199,23 +199,23 @@ expire_hours = 8760
 # Maximum number of boundary code insights to analyze
 # Lower values = faster processing, less risk of timeout
 # Higher values = more comprehensive analysis
-# Default: 50, Recommended for large projects: 15-20
-max_boundary_insights = 50
+# Default: 15, Recommended for large projects: 10-15
+max_boundary_insights = 15
 
 # Code insights limit for formatting in prompts
 # Controls the detail level in boundary analysis
-# Default: 100, Recommended for large projects: 25-30
-code_insights_limit = 100
+# Default: 25, Recommended for large projects: 20-30
+code_insights_limit = 25
 
 # Whether to include full source code in boundary analysis
 # Setting to false significantly reduces token usage and processing time
-# Default: true, Recommended for large projects: false
-include_source_code = true
+# Default: false, Recommended for large projects: false
+include_source_code = false
 
 # Only show directories when file count exceeds this threshold
 # Helps avoid information overload for large codebases
-# Default: 500, Recommended for large projects: 100
-only_directories_when_files_more_than = 500
+# Default: 100, Recommended for large projects: 50-100
+only_directories_when_files_more_than = 100
 
 # === Quick Fix for 504 Gateway Timeout Errors ===
 # If you're experiencing timeout errors during boundary analysis:
