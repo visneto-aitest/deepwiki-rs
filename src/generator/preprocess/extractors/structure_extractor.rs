@@ -255,6 +255,9 @@ impl StructureExtractor {
             }
 
             // Create directory information
+            // TODO: directories are traversed in filesystem (inode) order, not lexicographic order.
+            // This causes non-deterministic dir_list in log_tag and may affect caching consistency.
+            // Consider sorting directories lexicographically after scan for reproducible behavior.
             if current_path != root_path {
                 let dir_info = DirectoryInfo {
                     path: current_path.clone(),
