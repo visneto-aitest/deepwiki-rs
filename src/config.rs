@@ -105,6 +105,9 @@ pub struct Config {
     /// Whether to include hidden files
     pub include_hidden: bool,
 
+    /// Whether to only include files tracked by git (ignore untracked files)
+    pub git_tracked_only: bool,
+
     /// Directories to exclude
     pub excluded_dirs: Vec<String>,
 
@@ -639,9 +642,10 @@ impl Default for Config {
             identify_components: true,
             max_depth: 10,
             core_component_percentage: 20.0,
-            max_file_size: 64 * 1024, // 64KB
+            max_file_size: 512 * 1024, // 512KB
             include_tests: false,
             include_hidden: false,
+            git_tracked_only: true,
             excluded_dirs: vec![
                 ".litho".to_string(),
                 "litho.docs".to_string(),

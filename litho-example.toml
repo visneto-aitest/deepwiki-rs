@@ -36,14 +36,17 @@ max_depth = 10
 core_component_percentage = 40.0
 
 # Maximum file size to analyze (in bytes)
-# Default: 65536 (64KB)
-max_file_size = 65536
+# Default: 524288 (512KB)
+max_file_size = 524288
 
 # Include test files in analysis
 include_tests = false
 
 # Include hidden files (starting with .)
 include_hidden = false
+
+# Only include files tracked by git (ignore untracked files)
+git_tracked_only = true
 
 # Directories to exclude from analysis
 excluded_dirs = [

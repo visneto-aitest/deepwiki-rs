@@ -11,6 +11,7 @@ pub fn read_code_source(
     project_path: &PathBuf,
     file_path: &PathBuf,
     target_language: &TargetLanguage,
+    max_file_size: usize,
 ) -> String {
     // Build full file path
     let full_path = project_path.join(file_path);
@@ -18,7 +19,7 @@ pub fn read_code_source(
     // Read source code
     if let Ok(content) = std::fs::read_to_string(&full_path) {
         // If code is too long, intelligently truncate
-        truncate_source_code(language_processor, &full_path, &content, 8_1024)
+        truncate_source_code(language_processor, &full_path, &content, max_file_size)
     } else {
         let msg = target_language.msg_cannot_read_file();
         msg.replace("{}", &full_path.display().to_string())

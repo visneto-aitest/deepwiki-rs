@@ -11,6 +11,7 @@ use futures::future::BoxFuture;
 use std::collections::HashMap;
 use std::fs::Metadata;
 use std::path::PathBuf;
+use std::process::Command;
 
 /// Project structure extractor
 pub struct StructureExtractor {
@@ -52,6 +53,13 @@ impl StructureExtractor {
         let mut file_types = HashMap::new();
         let mut size_distribution = HashMap::new();
 
+        // Get git tracked files for filtering (only if needed)
+        let tracked_files = if self.context.config.git_tracked_only {
+            self.get_tracked_files(project_path)
+        } else {
+            HashMap::new()
+        };
+
         // Scan directory, extract internal directory and file structure and basic file information
         self.scan_directory(
             project_path,
@@ -60,6 +68,7 @@ impl StructureExtractor {
             &mut files,
             &mut file_types,
             &mut size_distribution,
+            &tracked_files,
             0,
             self.context.config.max_depth.into(),
         )
@@ -82,6 +91,28 @@ impl StructureExtractor {
         })
     }
 
+    /// Get files tracked by git as a HashSet of relative paths
+    fn get_tracked_files(&self, project_path: &PathBuf) -> HashMap<PathBuf, ()> {
+        let mut tracked = HashMap::new();
+
+        // Use git ls-files to get all tracked files
+        if let Ok(output) = Command::new("git")
+            .args(["ls-files"])
+            .current_dir(project_path)
+            .output()
+        {
+            if output.status.success() {
+                let files = String::from_utf8_lossy(&output.stdout);
+                for line in files.lines() {
+                    let path = project_path.join(line);
+                    tracked.insert(path, ());
+                }
+            }
+        }
+
+        tracked
+    }
+
     fn scan_directory<'a>(
         &'a self,
         current_path: &'a PathBuf,
@@ -90,6 +121,7 @@ impl StructureExtractor {
         files: &'a mut Vec<FileInfo>,
         file_types: &'a mut HashMap<String, usize>,
         size_distribution: &'a mut HashMap<String, usize>,
+        tracked_files: &'a HashMap<PathBuf, ()>,
         current_depth: usize,
         max_depth: usize,
     ) -> BoxFuture<'a, Result<()>> {
@@ -109,7 +141,7 @@ impl StructureExtractor {
 
                 if file_type.is_file() {
                     // Check if this file should be ignored
-                    if !self.should_ignore_file(&path) {
+                    if !self.should_ignore_file(&path, tracked_files) {
                         if let Ok(metadata) = std::fs::metadata(&path) {
                             let file_info = self.create_file_info(&path, root_path, &metadata)?;
 
@@ -146,6 +178,7 @@ impl StructureExtractor {
                             files,
                             file_types,
                             size_distribution,
+                            tracked_files,
                             current_depth + 1,
                             max_depth,
                         )
@@ -246,7 +279,7 @@ impl StructureExtractor {
         false
     }
 
-    fn should_ignore_file(&self, path: &PathBuf) -> bool {
+    fn should_ignore_file(&self, path: &PathBuf, tracked_files: &HashMap<PathBuf, ()>) -> bool {
         let config = &self.context.config;
         let file_name = path
             .file_name()
@@ -303,11 +336,9 @@ impl StructureExtractor {
             return true;
         }
 
-        // Check file size
-        if let Ok(metadata) = std::fs::metadata(path) {
-            if metadata.len() > config.max_file_size {
-                return true;
-            }
+        // Check git tracked files (if git_tracked_only is true)
+        if config.git_tracked_only && !tracked_files.is_empty() && !tracked_files.contains_key(path) {
+            return true;
         }
 
         // Check binary files
@@ -439,7 +470,7 @@ impl StructureExtractor {
 
             // Extract core code summary
             let source_summary =
-                read_code_source(&self.language_processor, &structure.root_path, &file.path, &self.context.config.target_language);
+                read_code_source(&self.language_processor, &structure.root_path, &file.path, &self.context.config.target_language, self.context.config.max_file_size as usize);
 
             core_codes.push(CodeDossier {
                 name: file.name.clone(),
