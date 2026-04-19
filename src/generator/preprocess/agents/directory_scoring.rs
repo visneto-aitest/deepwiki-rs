@@ -67,11 +67,24 @@ impl DirectoryScorer {
             "directory_scoring_{}",
             context.config.project_path.to_string_lossy().replace(['/', '\\', ':', '.'], "_")
         );
-        let log_tag = format!(
-            "dir_score({})_{}",
-            context.config.project_path.file_name().map(|n| n.to_string_lossy()).unwrap_or_else(|| "unknown".into()),
-            directories.len()
-        );
+        let project_name = context
+            .config
+            .project_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "unknown".to_string());
+        let dir_list: String = directories
+            .iter()
+            .take(5)
+            .map(|d| d.name.clone())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let more = if directories.len() > 5 {
+            format!(", +{} more", directories.len() - 5)
+        } else {
+            String::new()
+        };
+        let log_tag = format!("dir_score({}): {} dirs ({}{})", project_name, directories.len(), dir_list, more);
 
         let response: DirectoryScoringResponse = extract(
             context,
