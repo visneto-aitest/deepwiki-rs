@@ -418,7 +418,6 @@ impl StructureExtractor {
             }
 
             file.importance_score = score.min(1.0);
-            file.is_core = score > 0.5;
         }
 
         // Calculate directory importance scores
@@ -455,15 +454,17 @@ impl StructureExtractor {
     ) -> Result<Vec<CodeDossier>> {
         let mut core_codes = Vec::new();
 
-        // Filter core files based on importance score
-        let mut core_files: Vec<_> = structure.files.iter().filter(|f| f.is_core).collect();
-
-        // Sort by importance score in descending order, ensuring the most important components are processed first
-        core_files.sort_by(|a, b| {
+        // Sort all files by importance score in descending order
+        let mut all_files: Vec<_> = structure.files.iter().collect();
+        all_files.sort_by(|a, b| {
             b.importance_score
                 .partial_cmp(&a.importance_score)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
+
+        // Limit to core_component_percentage of total files
+        let max_files = ((structure.files.len() as f64) * self.context.config.core_component_percentage / 100.0).ceil() as usize;
+        let core_files: Vec<_> = all_files.into_iter().take(max_files).collect();
 
         for file in core_files {
             let code_purpose = self.determine_code_purpose(file).await;
