@@ -78,9 +78,6 @@ impl StructureExtractor {
         files.sort_by(|a, b| {
             b.importance_score.partial_cmp(&a.importance_score).unwrap_or(std::cmp::Ordering::Equal)
         });
-        let total_files = files.len();
-        let _ = total_files; // Used for ProjectStructure.total_files
-
         // Apply LLM directory scoring boost to all directories
         match self.directory_scorer.score_directories(&self.context, &directories).await {
             Ok(dir_scores) => {
@@ -108,7 +105,7 @@ impl StructureExtractor {
         })
     }
 
-    /// Get files tracked by git as a HashSet of absolute paths
+    /// Get files tracked by git as a HashMap (path -> ()) of absolute paths
     fn get_tracked_files(&self, project_path: &PathBuf) -> HashMap<PathBuf, ()> {
         let mut tracked = HashMap::new();
 
@@ -129,6 +126,11 @@ impl StructureExtractor {
             }
         } else {
             eprintln!("⚠️  Warning: Failed to run git ls-files, git_tracked_only will be ignored");
+        }
+
+        // Warn if git_tracked_only is enabled but no files were found
+        if self.context.config.git_tracked_only && tracked.is_empty() {
+            eprintln!("⚠️  Warning: git_tracked_only is enabled but no tracked files were found. Check that this is a git repository.");
         }
 
         tracked
@@ -161,9 +163,13 @@ impl StructureExtractor {
                 let file_type = entry.file_type().await?;
 
                 if file_type.is_file() {
-                    // Check if this file should be ignored
-                    if !self.should_ignore_file(&path, tracked_files) {
-                        if let Ok(metadata) = std::fs::metadata(&path) {
+                    // Check size before any other processing to avoid OOM
+                    if let Ok(metadata) = std::fs::metadata(&path) {
+                        if metadata.len() > self.context.config.max_file_size.into() {
+                            return Ok(());
+                        }
+                        // Check if this file should be ignored
+                        if !self.should_ignore_file(&path, tracked_files) {
                             let mut file_info = self.create_file_info(&path, root_path, &metadata)?;
 
                             // Calculate importance score during scan (lazy calculation)

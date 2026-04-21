@@ -518,6 +518,7 @@ pub enum ProviderAgent {
 impl ProviderAgent {
     /// Execute prompt with HTTP fallback for OpenAI-compatible providers
     pub async fn prompt(&self, prompt: &str, concurrency: usize) -> Result<String> {
+        let concurrency = concurrency.max(1);
         match self {
             ProviderAgent::OpenAI { agent, base_url, model, api_key } => {
                 // Try rig agent first with concurrency
