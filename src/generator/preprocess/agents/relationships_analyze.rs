@@ -9,10 +9,6 @@ use crate::{
     utils::prompt_compressor::{CompressionConfig, PromptCompressor},
 };
 
-/// Maximum index content size in characters before switching to two-phase selection.
-/// This is a prompt/index size limit, independent of max_file_size (which is a per-file disk read limit).
-const MAX_INDEX_CHARS: usize = 100_000;
-
 pub struct RelationshipsAnalyze {
     prompt_compressor: PromptCompressor,
 }
@@ -25,7 +21,7 @@ impl RelationshipsAnalyze {
     }
 
     /// Execute relationship analysis using directory dossiers.
-    /// Two-phase when index content exceeds MAX_INDEX_CHARS:
+    /// Two-phase when index content exceeds max_file_size:
     ///   Phase 1 — selection: LLM picks important directories + files
     ///   Phase 2 — analysis: LLM generates relationship graph from selected subset
     pub async fn execute(
@@ -36,7 +32,7 @@ impl RelationshipsAnalyze {
         // Build index (metadata only, no per-file details)
         let index_content = self.build_index_content(directory_dossiers);
         let index_size = index_content.len();
-        let index_threshold = MAX_INDEX_CHARS;
+        let index_threshold = context.config.max_file_size as usize;
 
         // Check if we need two-phase approach
         if index_size > index_threshold {
