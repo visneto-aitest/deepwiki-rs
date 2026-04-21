@@ -287,7 +287,7 @@ impl TargetLanguage {
         }
     }
 
-    /// Performing AI analysis — {} = progress, {} = path
+    /// Performing AI analysis — {} = current, {} = total, {} = path
     pub fn msg_ai_analyzing(&self) -> &'static str {
         match self {
             TargetLanguage::Chinese => "   🤖 正在进行AI分析 [{}/{}]: {}",

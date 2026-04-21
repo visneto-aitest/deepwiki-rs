@@ -34,7 +34,7 @@ pub async fn prompt(context: &GeneratorContext, params: AgentExecuteParams) -> R
         return Ok(cached_reply.to_string());
     }
 
-    let (current, total) = params.progress.unwrap_or((0, 0));
+    let (current, total) = params.progress.unwrap_or((1, 1));
     let msg = context.config.target_language.msg_ai_analyzing();
     let msg = msg
         .replacen("{}", &current.to_string(), 1)
@@ -86,7 +86,7 @@ pub async fn prompt_with_tools(
         return Ok(cached_reply.to_string());
     }
 
-    let (current, total) = params.progress.unwrap_or((0, 0));
+    let (current, total) = params.progress.unwrap_or((1, 1));
     let msg = context.config.target_language.msg_ai_analyzing();
     let msg = msg
         .replacen("{}", &current.to_string(), 1)
@@ -139,7 +139,7 @@ where
         return Ok(cached_reply);
     }
 
-    let (current, total) = params.progress.unwrap_or((0, 0));
+    let (current, total) = params.progress.unwrap_or((1, 1));
     let msg = context.config.target_language.msg_ai_analyzing();
     let msg = msg
         .replacen("{}", &current.to_string(), 1)

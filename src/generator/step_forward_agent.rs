@@ -203,7 +203,7 @@ impl DataFormatter {
             }
             if config.include_source_code {
                 content.push_str(&format!(
-                    "   Source code details: ```code\n{}\n\n",
+                    "   Source code details: ```code\n{}\n```\n",
                     &insight.code_dossier.source_summary
                 ));
             }
@@ -254,7 +254,7 @@ impl DataFormatter {
             }
             if config.include_source_code && !fi.source_summary.is_empty() {
                 content.push_str(&format!(
-                    "   Source code details: ```code\n{}\n\n",
+                    "   Source code details: ```code\n{}\n```\n",
                     fi.source_summary
                 ));
             }
